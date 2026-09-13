@@ -41,7 +41,7 @@
 把这句话发给 Codex：
 
 ```text
-请从 https://github.com/u5282261146-crypto/- 安装 skills/xqg-business-network 这个 Skill。
+请从 https://github.com/u5282261146-crypto/xqg-business-network 安装 skills/xqg-business-network 这个 Skill。
 ```
 
 安装后，直接说：
