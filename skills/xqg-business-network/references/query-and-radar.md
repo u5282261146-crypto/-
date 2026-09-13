@@ -16,7 +16,7 @@ python3 scripts/network_client.py stats
 
 查询命令只读；submit等命令可按内部记录规则写入必要接待记录，但不自动创建公开档案、不发消息、不创建任务。脚本路径以 Skill 所在目录为准。
 
-配置依次读取显式 --config、`XQG_NETWORK_CONFIG`、Skill 根目录的 `operator.local.json`、用户目录 `~/.config/xqg-business-network/connection.json`，最后使用发行包的 `service.json`。显式指定的配置不存在时报告错误，不悄悄切换服务器。正式公网连通验证后才把真实HTTPS地址加入service.json；准备版未包含该文件，不能编造URL。
+配置依次读取显式 --config、`XQG_NETWORK_CONFIG`、Skill 根目录的 `operator.local.json`、用户目录 `~/.config/xqg-entrepreneur-network/connection.json（沿用改名前的位置以兼容已有连接）`，最后使用发行包的 `service.json`。显式指定的配置不存在时报告错误，不悄悄切换服务器。发行包已包含service.json，使用其中真实HTTPS地址，不自行编造或替换URL。
 
 公开http连接使用automatic_session:true，脚本自动在用户目录保存独立访问标识，无须人工激活或先加微信。访问标识不输出到聊天，也不加入发行包。重新连接沿用已有标识，不通过删除文件或重装绕过额度。记录停止状态保存在后台，续期不重新开启。
 
@@ -42,7 +42,7 @@ local与ssh_operator仅用于运营者授权环境。token_file/token_env为兼�
 
 ## Codex MVP 连接
 
-首轮只支持 Codex。服务端已在Mac mini运行，但公共 HTTPS 地址尚未部署，不能填写虚构地址。
+首轮只支持 Codex。发行包已连接公共 HTTPS 查询接口；服务是否可用仍以当前status返回为准。
 
 正式公共入口就绪后，运行status应自动连接并返回真实能力；“安装成功”不代表“连接成功”。未连接时说明当前状态，继续整理卡片；不引导人工激活。
 
