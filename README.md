@@ -1,4 +1,4 @@
-# 小强哥创业需求资源匹配网络 · Codex MVP 0.3.2
+# 小强哥 Business Network · Codex MVP 0.3.3
 
 通过自然聊天梳理创业者的业务、资源和需求，生成方便复制到微信的合作档案卡。
 
@@ -9,15 +9,15 @@
 把下面这句话复制给 Codex：
 
 ```text
-请使用 $skill-installer，从 https://github.com/u5282261146-crypto/- 安装 skills/xqg-entrepreneur-network 目录中的 Skill。
+请使用 $skill-installer，从 https://github.com/u5282261146-crypto/- 安装 skills/xqg-business-network 目录中的 Skill。
 ```
 
-本仓库的技能目录为 skills/xqg-entrepreneur-network。若使用ZIP，把这个完整技能目录交给Codex安装，不要把仓库根目录误当成技能目录。
+本仓库的技能目录为 skills/xqg-business-network。若使用ZIP，把这个完整技能目录交给Codex安装，不要把仓库根目录误当成技能目录。
 
 安装后输入：
 
 ```text
-使用 $xqg-entrepreneur-network，了解我的业务和合作需求。
+使用 $xqg-business-network，了解我的业务和合作需求。
 ```
 
 测试时明确说“这是角色扮演，不真实登记、不创建任务”。
