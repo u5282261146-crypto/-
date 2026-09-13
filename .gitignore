@@ -1,0 +1,9 @@
+operator.local.json
+*.sqlite*
+*.db
+.env*
+__pycache__/
+*.pyc
+*.key
+credential*
+connection.json
