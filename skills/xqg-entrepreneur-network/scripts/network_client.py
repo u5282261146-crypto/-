@@ -1,5 +1,5 @@
-"""只读客户端：不带数据库或凭证。默认未连接，可接运营者本地库或已部署 HTTPS API。"""
-import argparse,json,os,re,sqlite3,sys
+"""网络客户端：查询、告知后的内部记录；不带数据库或共享凭证，不自动登记公开档案。"""
+import argparse,json,os,re,sqlite3,sys,secrets,hashlib,stat
 from pathlib import Path
 from urllib import request,error,parse
 
@@ -21,7 +21,7 @@ def project_person(p):
         identity_review_required=bool(p.get('identity_review_required')))
 
 def local(config,args):
-    if args.command in ('submit','delete-submission'):return dict(status='not_connected',message='提交需要连接正式网络；本地查人模式不上传记录。')
+    if args.command in ('submit','delete-submission','stop-recording'):return dict(status='not_connected',message='提交需要连接正式网络；本地查人模式不上传记录。')
     if config.get('audience')!='operator':
         return dict(status='configuration_error',message='本地历史库仅限已配置的运营者环境，不能作为公开查询源。')
     path=Path(config['database_path']).expanduser().resolve()
@@ -85,6 +85,27 @@ def ssh_operator(config,args):
 class NoRedirect(request.HTTPRedirectHandler):
     def redirect_request(self,*args,**kwargs):return None
 
+def automatic_token(base_url):
+    # Persist before enrollment: retry or offline failure reuses the same identity.
+    folder=Path.home()/'.config/xqg-entrepreneur-network';folder.mkdir(parents=True,exist_ok=True,mode=0o700)
+    dest=folder/('session-'+hashlib.sha256(base_url.encode()).hexdigest()[:20]+'.key')
+    try:
+        fd=os.open(dest,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+        with os.fdopen(fd,'w') as f:f.write(secrets.token_urlsafe(32))
+    except FileExistsError:pass
+    if dest.is_symlink():raise ValueError('unsafe session file')
+    fd=os.open(dest,os.O_RDONLY|getattr(os,'O_NOFOLLOW',0)|getattr(os,'O_NONBLOCK',0))
+    with os.fdopen(fd) as f:
+        info=os.fstat(f.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:raise ValueError('unsafe session file')
+        token=f.read(129).strip()
+    if not re.fullmatch(r'[A-Za-z0-9_-]{43}',token):raise ValueError('invalid session file')
+    req=request.Request(base_url+'/v1/session',data=b'{}',headers={'Content-Type':'application/json','User-Agent':'XQG-Entrepreneur-Network/0.3.2','Authorization':'Bearer '+token},method='POST')
+    with request.build_opener(NoRedirect).open(req,timeout=15) as response:
+        data=json.loads(response.read(4096))
+    if data.get('session_ready') is not True:raise ValueError('session unavailable')
+    return token
+
 def remote(config,args):
     base_url=config.get('base_url','').rstrip('/')
     u=parse.urlsplit(base_url)
@@ -97,9 +118,16 @@ def remote(config,args):
     elif args.command=='submit':
         payload=dict(id=args.id,scope=args.scope,text=Path(args.file).read_text(),notice_shown=args.notice_shown,notice_version='2026-09-13-v2')
     elif args.command=='delete-submission':payload=dict(id=args.id)
-    headers={'Content-Type':'application/json','Accept':'application/json'}
+    headers={'Content-Type':'application/json','Accept':'application/json','User-Agent':'XQG-Entrepreneur-Network/0.3.2'}
     token_var=config.get('token_env')
     token_path=config.get('token_file')
+    automatic=config.get('automatic_session',False)
+    if type(automatic) is not bool or (automatic and (token_var or token_path)):
+        raise ValueError('ambiguous credential source')
+    if automatic:
+        headers['Authorization']='Bearer '+automatic_token(base_url)
+    elif not (token_var or token_path):
+        return dict(status='not_connected',message='连接配置不完整，请更新官方Skill；不需要人工激活。')
     if token_var or token_path:
         if token_var and token_path:raise ValueError('ambiguous credential source')
         if token_path:
@@ -142,6 +170,8 @@ def main():
     default_config=ROOT/'operator.local.json'
     if not default_config.is_file():default_config=Path.home()/'.config/xqg-entrepreneur-network/connection.json'
     path=Path(args.config or os.environ.get('XQG_NETWORK_CONFIG') or default_config).expanduser()
+    if not path.is_file() and not args.config and not os.environ.get('XQG_NETWORK_CONFIG'):
+        path=ROOT/'service.json'
     if not path.is_file():return dict(status='not_connected',search_available=False,message='尚未连接创业者资源网络。可以先整理档案卡，通过小强哥完成登记或申请引荐。')
     try:
         config=json.loads(path.read_text())
