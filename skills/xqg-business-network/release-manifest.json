@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "version": "0.3.6",
+  "summary": "更新由助手代办，保留原连接；普通新版不影响继续使用。",
+  "files": {
+    "service.json": "8d9c98757e9adb388dd2f2c566ec75650ffff3df35f220bf119f1260012d1933",
+    "SKILL.md": "d1760d08c9af81ee2de5c222d64d907888cc7866ee4e1a923b83c79a3b8c8832",
+    "agents/openai.yaml": "fb1c037ba20ef8315bca44c4c91fa1072b504e21b7b35182c1e4f29a911c3bde",
+    "references/profile-card.md": "048eac3ae6876ee553a2b6cc7933ffcb0c1c5c4a1b6d66257fc82ea02bb648b2",
+    "references/query-and-radar.md": "9cdd6bb7e0253c56c5ea204e518911a0e487511f253076fd41d045ca9d459323",
+    "references/platforms.md": "26305f272a977d0df922956d7bcec3847698fd75cb13c4b1a35b91f8b6481a6f",
+    "references/interaction-records.md": "3eb61cabaf573495a19cbd7f463a1e6ef07666bb520d2e00ea16d90b7ec1a740",
+    "scripts/network_client.py": "5e1325e25c0a1be339a2d61f5f6e0318a049d55efb9752a1cd41ded665116992",
+    "scripts/setup_connection.py": "140e7c26e168c7b7b86b7fbd3699d88ccecbb313a7135027c158375c131dd7a9",
+    "scripts/update_skill.py": "cabd70a5b82e87058268cf87d19bc74ab402cf8b76f6782ea22d3637ad6ae0c0",
+    "references/updates.md": "dfe26956f2aa6302128592e5d29ace47e5064271d0f1c0f99711153f605aa99a",
+    "LICENSE": "e9bdafc87e889f75622aade8b0210f48e24fef9fcaeaf78c89f2128d24e6d8de"
+  },
+  "legacy_baselines": [
+    {
+      "service.json": "8d9c98757e9adb388dd2f2c566ec75650ffff3df35f220bf119f1260012d1933",
+      "SKILL.md": "bbf09c28011e596ba7b14902361190763c4c3262efcbfdc05ada5930a16924b3",
+      "agents/openai.yaml": "fb1c037ba20ef8315bca44c4c91fa1072b504e21b7b35182c1e4f29a911c3bde",
+      "references/profile-card.md": "048eac3ae6876ee553a2b6cc7933ffcb0c1c5c4a1b6d66257fc82ea02bb648b2",
+      "references/query-and-radar.md": "9cdd6bb7e0253c56c5ea204e518911a0e487511f253076fd41d045ca9d459323",
+      "references/platforms.md": "26305f272a977d0df922956d7bcec3847698fd75cb13c4b1a35b91f8b6481a6f",
+      "references/interaction-records.md": "3eb61cabaf573495a19cbd7f463a1e6ef07666bb520d2e00ea16d90b7ec1a740",
+      "scripts/network_client.py": "aa9db5b01edc14bbf4c7fed5bc4751e99c00ba94dd55d3b49df615929b3b66f4",
+      "scripts/setup_connection.py": "140e7c26e168c7b7b86b7fbd3699d88ccecbb313a7135027c158375c131dd7a9",
+      "LICENSE": "e9bdafc87e889f75622aade8b0210f48e24fef9fcaeaf78c89f2128d24e6d8de"
+    },
+    {
+      "service.json": "8d9c98757e9adb388dd2f2c566ec75650ffff3df35f220bf119f1260012d1933",
+      "SKILL.md": "799a3ef1ed9df3f7f56d570db036daba0b5433624ccaa9a607b40b9a7ba418a8",
+      "agents/openai.yaml": "fb1c037ba20ef8315bca44c4c91fa1072b504e21b7b35182c1e4f29a911c3bde",
+      "references/profile-card.md": "048eac3ae6876ee553a2b6cc7933ffcb0c1c5c4a1b6d66257fc82ea02bb648b2",
+      "references/query-and-radar.md": "9cdd6bb7e0253c56c5ea204e518911a0e487511f253076fd41d045ca9d459323",
+      "references/platforms.md": "26305f272a977d0df922956d7bcec3847698fd75cb13c4b1a35b91f8b6481a6f",
+      "references/interaction-records.md": "95be032d3ff9de79eaae0b559751ec93c39115b7a8ddda96e160827a41053c21",
+      "scripts/network_client.py": "6dd2216347e7e7e68e6b0e2aa9727bf2e570a9f967facb0fb0604681d2430e78",
+      "scripts/setup_connection.py": "140e7c26e168c7b7b86b7fbd3699d88ccecbb313a7135027c158375c131dd7a9",
+      "LICENSE": "e9bdafc87e889f75622aade8b0210f48e24fef9fcaeaf78c89f2128d24e6d8de"
+    }
+  ]
+}
