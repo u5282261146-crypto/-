@@ -101,7 +101,7 @@ def automatic_token(base_url):
         if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:raise ValueError('unsafe session file')
         token=f.read(129).strip()
     if not re.fullmatch(r'[A-Za-z0-9_-]{43}',token):raise ValueError('invalid session file')
-    req=request.Request(base_url+'/v1/session',data=b'{}',headers={'Content-Type':'application/json','User-Agent':'XQG-Business-Network/0.3.3','Authorization':'Bearer '+token},method='POST')
+    req=request.Request(base_url+'/v1/session',data=b'{}',headers={'Content-Type':'application/json','User-Agent':'XQG-Business-Network/0.3.5','Authorization':'Bearer '+token},method='POST')
     with request.build_opener(NoRedirect).open(req,timeout=15) as response:
         data=json.loads(response.read(4096))
     if data.get('session_ready') is not True:raise ValueError('session unavailable')
@@ -117,9 +117,9 @@ def remote(config,args):
     if args.command=='search':payload=dict(query=args.query,city=args.city,kind=args.kind,limit=args.limit)
     elif args.command=='person':payload=dict(person_id=args.id)
     elif args.command=='submit':
-        payload=dict(id=args.id,scope=args.scope,text=Path(args.file).read_text(),notice_shown=args.notice_shown,notice_version='2026-09-13-v2')
+        payload=dict(id=args.id,scope=args.scope,text=Path(args.file).read_text(),notice_shown=args.notice_shown,notice_version='2026-09-14-v3' if args.scope=='conversation_turn' else '2026-09-13-v2')
     elif args.command=='delete-submission':payload=dict(id=args.id)
-    headers={'Content-Type':'application/json','Accept':'application/json','User-Agent':'XQG-Business-Network/0.3.3'}
+    headers={'Content-Type':'application/json','Accept':'application/json','User-Agent':'XQG-Business-Network/0.3.5'}
     token_var=config.get('token_env')
     token_path=config.get('token_file')
     automatic=config.get('automatic_session',False)
@@ -147,7 +147,7 @@ def remote(config,args):
         data=json.loads(body)
     if data.get('status')!='ok':return dict(status='service_unavailable',message='共享查询暂不可用。')
     result=dict(status='ok',audience='public',as_of=data.get('as_of'))
-    if args.command=='status':return dict(result,mode='http',search_available=bool(data.get('search_available')),client_latest=data.get('client_latest'),submission_available=bool(data.get('submission_available')),scheduler_available='由宿主另行核实')
+    if args.command=='status':return dict(result,mode='http',search_available=bool(data.get('search_available')),client_latest=data.get('client_latest'),submission_available=bool(data.get('submission_available')),conversation_turn_available=bool(data.get('conversation_turn_available')),scheduler_available='由宿主另行核实')
     if args.command=='submit':return dict(result,submission_id=data.get('submission_id'),saved=data.get('saved') is True,registered=False,retention_days=data.get('retention_days'))
     if args.command=='stop-recording':return dict(result,recording_stopped=data.get('recording_stopped') is True)
     if args.command=='delete-submission':return dict(result,deleted=data.get('deleted') is True)
@@ -162,7 +162,7 @@ def main():
     s=sub.add_parser('search');s.add_argument('--query',required=True);s.add_argument('--city',default='')
     s.add_argument('--kind',choices=['resource','need']);s.add_argument('--limit',type=int,default=3)
     p=sub.add_parser('person');p.add_argument('--id',required=True);p.set_defaults(limit=1)
-    subm=sub.add_parser('submit');subm.add_argument('--file',required=True);subm.add_argument('--scope',choices=['profile_summary','conversation_excerpt'],required=True);subm.add_argument('--id',required=True);subm.add_argument('--notice-shown',action='store_true',required=True)
+    subm=sub.add_parser('submit');subm.add_argument('--file',required=True);subm.add_argument('--scope',choices=['profile_summary','conversation_excerpt','conversation_turn'],required=True);subm.add_argument('--id',required=True);subm.add_argument('--notice-shown',action='store_true',required=True)
     sub.add_parser('stop-recording')
     delete=sub.add_parser('delete-submission');delete.add_argument('--id',required=True)
     args=parser.parse_args()
