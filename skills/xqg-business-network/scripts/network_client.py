@@ -5,6 +5,41 @@ from pathlib import Path
 from urllib import request,error,parse
 
 ROOT=Path(__file__).resolve().parents[1]
+CLIENT_VERSION='0.3.6'
+def version_tuple(value):
+    if not isinstance(value,str) or not re.fullmatch(r'\d+\.\d+\.\d+',value):return None
+    return tuple(map(int,value.split('.')))
+
+def update_metadata(data,notify=False):
+    policy=data.get('client_policy')
+    if not isinstance(policy,dict):policy={}
+    latest=policy.get('latest',data.get('client_latest'))
+    minimum=policy.get('minimum_supported')
+    newer=version_tuple(latest) is not None and version_tuple(latest)>version_tuple(CLIENT_VERSION)
+    required=version_tuple(minimum) is not None and version_tuple(minimum)>version_tuple(CLIENT_VERSION)
+    due=False
+    if newer and notify:
+        try:
+            folder=Path.home()/'.config/xqg-entrepreneur-network';folder.mkdir(parents=True,exist_ok=True,mode=0o700)
+            marker=folder/'update-notice.json'
+            if marker.is_symlink():raise ValueError('unsafe notice marker')
+            previous=json.loads(marker.read_text()) if marker.exists() else {}
+            due=previous.get('version')!=latest
+            if due:
+                with marker.open('w') as f:
+                    marker.chmod(0o600);json.dump({'version':latest},f)
+        except (OSError,ValueError,TypeError,AttributeError):due=False
+    return dict(client_version=CLIENT_VERSION,client_latest=latest if version_tuple(latest) else None,
+        update_available=newer,update_required=required,update_notice_due=due,
+        update_entry='scripts/update_skill.py',existing_service_available=not required)
+
+def http_failure(exc):
+    if exc.code==426:
+        return dict(status='update_required',update_required=True,update_entry='scripts/update_skill.py',
+            message='当前版本需要更新才能继续此项操作。助手可帮你完成更新，无需重新注册或手工配置。')
+    if exc.code==429:return dict(status='query_limit_reached',message='查询频率或可查看档案额度已达上限。请稍后重试或联系小强哥，不通过换词、换账号或遍历编号绕过限制。')
+    return dict(status='not_connected' if exc.code in (401,403) else 'service_unavailable',http_status=exc.code,message='查询未成功，请核实连接或权限。')
+
 def scrub(value):
     text=str(value or '')
     text=re.sub(r'(?<!\d)(?:\+?86[- ]?)?1[3-9]\d{9}(?!\d)','[联系方式不展示]',text)
@@ -101,7 +136,7 @@ def automatic_token(base_url):
         if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:raise ValueError('unsafe session file')
         token=f.read(129).strip()
     if not re.fullmatch(r'[A-Za-z0-9_-]{43}',token):raise ValueError('invalid session file')
-    req=request.Request(base_url+'/v1/session',data=b'{}',headers={'Content-Type':'application/json','User-Agent':'XQG-Business-Network/0.3.5','Authorization':'Bearer '+token},method='POST')
+    req=request.Request(base_url+'/v1/session',data=b'{}',headers={'Content-Type':'application/json','User-Agent':'XQG-Business-Network/0.3.6','Authorization':'Bearer '+token},method='POST')
     with request.build_opener(NoRedirect).open(req,timeout=15) as response:
         data=json.loads(response.read(4096))
     if data.get('session_ready') is not True:raise ValueError('session unavailable')
@@ -119,7 +154,7 @@ def remote(config,args):
     elif args.command=='submit':
         payload=dict(id=args.id,scope=args.scope,text=Path(args.file).read_text(),notice_shown=args.notice_shown,notice_version='2026-09-14-v3' if args.scope=='conversation_turn' else '2026-09-13-v2')
     elif args.command=='delete-submission':payload=dict(id=args.id)
-    headers={'Content-Type':'application/json','Accept':'application/json','User-Agent':'XQG-Business-Network/0.3.5'}
+    headers={'Content-Type':'application/json','Accept':'application/json','User-Agent':'XQG-Business-Network/0.3.6'}
     token_var=config.get('token_env')
     token_path=config.get('token_file')
     automatic=config.get('automatic_session',False)
@@ -146,8 +181,8 @@ def remote(config,args):
         if len(body)>1024*1024:raise ValueError('response too large')
         data=json.loads(body)
     if data.get('status')!='ok':return dict(status='service_unavailable',message='共享查询暂不可用。')
-    result=dict(status='ok',audience='public',as_of=data.get('as_of'))
-    if args.command=='status':return dict(result,mode='http',search_available=bool(data.get('search_available')),client_latest=data.get('client_latest'),submission_available=bool(data.get('submission_available')),conversation_turn_available=bool(data.get('conversation_turn_available')),scheduler_available='由宿主另行核实')
+    result=dict(status='ok',audience='public',as_of=data.get('as_of'),**update_metadata(data,notify=args.command=='status'))
+    if args.command=='status':return dict(result,mode='http',search_available=bool(data.get('search_available')),submission_available=bool(data.get('submission_available')),conversation_turn_available=bool(data.get('conversation_turn_available')),scheduler_available='由宿主另行核实')
     if args.command=='submit':return dict(result,submission_id=data.get('submission_id'),saved=data.get('saved') is True,registered=False,retention_days=data.get('retention_days'))
     if args.command=='stop-recording':return dict(result,recording_stopped=data.get('recording_stopped') is True)
     if args.command=='delete-submission':return dict(result,deleted=data.get('deleted') is True)
@@ -181,9 +216,7 @@ def main():
         if config.get('mode')=='http':return remote(config,args)
         return dict(status='configuration_error',message='未识别的连接方式。')
     except error.HTTPError as exc:
-        if exc.code==429:
-            return dict(status='query_limit_reached',message='查询频率或可查看档案额度已达上限。请稍后重试或联系小强哥，不通过换词、换账号或遍历编号绕过限制。')
-        return dict(status='not_connected' if exc.code in (401,403) else 'service_unavailable',http_status=exc.code,message='查询未成功，请核实连接或权限。')
+        return http_failure(exc)
     except (OSError,ValueError,KeyError,TypeError,AttributeError,sqlite3.Error,error.URLError):
         return dict(status='service_unavailable',message='无法完成查询，请检查连接配置或服务状态；未返回任何匹配结果。')
 
